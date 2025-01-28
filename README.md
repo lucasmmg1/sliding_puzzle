@@ -12,7 +12,7 @@ This is a simple puzzle created in the processing programming language!
 </p>
 
 <br>
-The example bellow was created with the variable NUMBER_OF_PIECES set to 16;
+The example bellow was created with the variable NUMBER_OF_PIECES set to 16.
 
 <br>
 <br>
