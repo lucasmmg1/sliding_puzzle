@@ -13,7 +13,7 @@ This is a simple puzzle created in the processing programming language!
 
 <br>
 The example bellow was created with the following parameters:
-NUMBER_OF_PIECES = 16
+<br>NUMBER_OF_PIECES = 16
 
 <br>
 <br>
