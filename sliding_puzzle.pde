@@ -2,86 +2,93 @@
 int NUMBER_OF_PIECES = 16;
 
 PImage source;
-ArrayList<Piece> pieces;
-Grid grid;
+ArrayList<PVector> pieceOriginalPositions = new ArrayList<PVector>();
+ArrayList<PVector> pieceCurrentPositions = new ArrayList<PVector>();
+ArrayList<PImage> pieceImages = new ArrayList<PImage>();
 int divisions;
 
+boolean isSelected = false;
+int selectedIndex = -1;
 
-String isSelected = "false";
-Piece selectedPiece;
-
-void setup()
-{
+void setup() {
   size(514, 514);
-  
   source = loadImage("https://placedog.net/512x512", "png");
-  divisions = (int)sqrt(NUMBER_OF_PIECES);
+  divisions = (int) sqrt(NUMBER_OF_PIECES);
   
-  pieces = new ArrayList<Piece>();
-  for (int x = 0; x < divisions; x++)
-    for (int y = 0; y < divisions; y++)
-      pieces.add(new Piece(new PVector(x, y)));
-      
-  grid = new Grid(2);
-}
-void draw()
-{
-  background(0);
-  
-  for (int x = 0; x < pieces.size(); x++)
-    pieces.get(x).draw();
-    
-  grid.draw();
-}
-void mouseClicked()
-{ 
-  switch (isSelected)
-  {
-    case "true":
-      for (int x = 0; x < pieces.size(); x++)
-      {
-        Piece piece = pieces.get(x);
-        if ((mouseX >= piece.cp.x * 128 && mouseX <= piece.cp.x * 128 + 128) && (mouseY >= piece.cp.y * 128 && mouseY <= piece.cp.y * 128 + 128))
-        {
-          isSelected = "false";
-          PVector tmp = selectedPiece.cp;
-          selectedPiece.cp = piece.cp;
-          piece.cp = tmp;
-        }
-      }
-      break;
-      
-    case "false":
-      for (int x = 0; x < pieces.size(); x++)
-      {
-        Piece piece = pieces.get(x);
-        if ((mouseX >= piece.cp.x * 128 && mouseX <= piece.cp.x * 128 + 128) && (mouseY >= piece.cp.y * 128 && mouseY <= piece.cp.y * 128 + 128))
-        {
-          isSelected = "true";
-          selectedPiece = piece;
-        }
-      }
-      break;
+  for (int x = 0; x < divisions; x++) {
+    for (int y = 0; y < divisions; y++) {
+      PVector pos = new PVector(x, y);
+      pieceOriginalPositions.add(pos);
+      pieceCurrentPositions.add(pos.copy());
+
+      PImage img = createImage(width / divisions, height / divisions, RGB);
+      img.copy(source,
+               (int)pos.x * (width / divisions),
+               (int)pos.y * (height / divisions),
+               width / divisions, height / divisions,
+               0, 0, width / divisions, height / divisions);
+      pieceImages.add(img);
+    }
   }
 }
 
-void keyPressed()
-{
-  if (key == 's')
-  {
-    int quantity = pieces.size() / 2;
-    ArrayList<Piece> temp = new ArrayList<Piece>(pieces);
-    for (int x = 0; x < quantity; x++)
-    {
-      int piece_1 = (int)random(0, temp.size());
-      temp.remove(piece_1);
-      int piece_2 = (int)random(0, temp.size());
-      temp.remove(piece_2);
+void draw() {
+  background(0);
+  
+  for (int i = 0; i < pieceImages.size(); i++) {
+    PVector cp = pieceCurrentPositions.get(i);
+    image(pieceImages.get(i), (int)cp.x * (width / divisions), (int)cp.y * (height / divisions));
+  }
+  
+  drawGrid(2);
+}
+
+void drawGrid(int weight) {
+  strokeWeight(weight);
+  for (int x = 0; x < divisions; x++) {
+    line(x * (width / divisions), 0, x * (width / divisions), height);
+    line(0, x * (height / divisions), width, x * (height / divisions));
+  }
+}
+
+void mouseClicked() {
+  for (int i = 0; i < pieceCurrentPositions.size(); i++) {
+    PVector cp = pieceCurrentPositions.get(i);
+    float px = cp.x * (width / divisions);
+    float py = cp.y * (height / divisions);
+    
+    if (mouseX >= px && mouseX <= px + width / divisions &&
+        mouseY >= py && mouseY <= py + height / divisions) {
+      if (!isSelected) {
+        selectedIndex = i;
+        isSelected = true;
+      } else {
+        // Swap positions
+        PVector temp = pieceCurrentPositions.get(i);
+        pieceCurrentPositions.set(i, pieceCurrentPositions.get(selectedIndex));
+        pieceCurrentPositions.set(selectedIndex, temp);
+        isSelected = false;
+        selectedIndex = -1;
+      }
+      break;
+    }
+  }
+}
+
+void keyPressed() {
+  if (key == 's') {
+    int quantity = pieceCurrentPositions.size() / 2;
+    ArrayList<Integer> tempIndices = new ArrayList<Integer>();
+    for (int i = 0; i < pieceCurrentPositions.size(); i++) tempIndices.add(i);
+
+    for (int i = 0; i < quantity; i++) {
+      int idx1 = tempIndices.remove((int)random(tempIndices.size()));
+      int idx2 = tempIndices.remove((int)random(tempIndices.size()));
       
-      PVector temp_cep_1 = pieces.get(piece_1).cp;
-      PVector temp_cep_2 = pieces.get(piece_2).cp;
-      pieces.get(piece_1).cp = temp_cep_2;
-      pieces.get(piece_2).cp = temp_cep_1;
-    }    
+      PVector temp1 = pieceCurrentPositions.get(idx1);
+      PVector temp2 = pieceCurrentPositions.get(idx2);
+      pieceCurrentPositions.set(idx1, temp2);
+      pieceCurrentPositions.set(idx2, temp1);
+    }
   }
 }
